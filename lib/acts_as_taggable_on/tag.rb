@@ -6,6 +6,7 @@ module ActsAsTaggableOn
     ### ASSOCIATIONS:
 
     has_many :taggings, dependent: :destroy, class_name: '::ActsAsTaggableOn::Tagging'
+    has_many :tag_bounds, dependent: :destroy, class_name: '::ActsAsTaggableOn::TagBound'
 
     ### VALIDATIONS:
 
