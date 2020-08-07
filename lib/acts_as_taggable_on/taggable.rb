@@ -54,21 +54,49 @@ module ActsAsTaggableOn
       taggable_on(true, tag_types)
     end
 
+    def acts_as_bounded_taggable_on(*tag_types)
+      taggable_with_bounds_on(false, true, tag_types)
+    end
+
     private
 
-      # Make a model taggable on specified contexts
-      # and optionally preserves the order in which tags are created
-      #
-      # Separate methods used above for backwards compatibility
-      # so that the original acts_as_taggable_on method is unaffected
-      # as it's not possible to add another argument to the method
-      # without the tag_types being enclosed in square brackets
-      #
-      # NB: method overridden in core module in order to create tag type
-      #     associations and methods after this logic has executed
-      #
     def taggable_on(preserve_tag_order, *tag_types)
+      taggable_with_bounds_on(preserve_tag_order, false, tag_types)
+    end
+
+    # Make a model taggable on specified contexts
+    # and optionally preserves the order in which tags are created
+    #
+    # Separate methods used above for backwards compatibility
+    # so that the original acts_as_taggable_on method is unaffected
+    # as it's not possible to add another argument to the method
+    # without the tag_types being enclosed in square brackets
+    #
+    # NB: method overridden in core module in order to create tag type
+    #     associations and methods after this logic has executed
+    #
+    def taggable_with_bounds_on(preserve_tag_order, bound_by_model, *tag_types)
       tag_types = tag_types.to_a.flatten.compact.map(&:to_sym)
+
+      # TODO: Move following to mixin
+      class_attribute :bounded_tags
+      self.bounded_tags = bound_by_model
+      
+      class_eval do
+        def self.bounded_tags?
+          self.bounded_tags
+        end
+
+        def self.available_tags
+          tags = ActsAsTaggableOn::Tag.select("tags.*")
+
+          if bounded_tags?
+            tags.joins(:tag_bounds).where("`tag_bounds`.`class_name` = ?", self.to_s)
+          else
+            tags
+          end
+        end
+      end
 
       if taggable?
         self.tag_types = (self.tag_types + tag_types).uniq

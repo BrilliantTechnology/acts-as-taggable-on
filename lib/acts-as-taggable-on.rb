@@ -15,6 +15,7 @@ module ActsAsTaggableOn
   extend ActiveSupport::Autoload
 
   autoload :Tag
+  autoload :TagBound
   autoload :TagList
   autoload :GenericParser
   autoload :DefaultParser

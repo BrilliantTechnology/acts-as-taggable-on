@@ -176,6 +176,34 @@ end
 @user.tag_list # => ["north", "east", "south", "west"]
 ```
 
+### Bounded tags _✨Experimental✨_
+
+With the addition of a `tag_bounds` join table, you can restrict tags on to the
+model it is defined with. Currently, only tags create with `*_tag_list` writer
+will be automatically bounded to the model.
+
+```ruby
+class User < ActiveRecord::Base
+  acts_as_bounded_taggable_on :search_tags
+end
+
+class Product < ActiveRecord::Base
+  acts_as_bounded_taggable_on :search_tags
+end
+
+u = User.first
+u.search_tag_list += "bob"
+u.save
+
+p = Product.first
+p.search_tag_list += "jane"
+p.save
+
+User.available_tags # [ #<Tag... name: "bob">,]
+Product.available_tags # [ #<Tag... name: "jane">,]
+ActsAsTaggableOn::Tag.all # [ #<Tag... name: "bob">, #<Tag... name: "jane">,]
+```
+
 ### Finding most or least used tags
 
 You can find the most or least used tags by using:
