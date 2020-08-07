@@ -18,20 +18,43 @@ module ActsAsTaggableOn::Taggable
           tag_type = tags_type.to_s.singularize
           context_taggings = "#{tag_type}_taggings".to_sym
           context_tags = tags_type.to_sym
+          bound_class_name = self.to_s if bounded_tags?
           taggings_order = (preserve_tag_order? ? "#{ActsAsTaggableOn::Tagging.table_name}.id" : [])
 
           class_eval do
             # when preserving tag order, include order option so that for a 'tags' context
             # the associations tag_taggings & tags are always returned in created order
-            has_many context_taggings, -> { includes(:tag).order(taggings_order).where(context: tags_type) },
-                     as: :taggable,
-                     class_name: ActsAsTaggableOn::Tagging,
-                     dependent: :destroy
+            has_many context_taggings,
+              -> {
+                if bound_class_name.nil?
+                  includes(:tag)
+                  .order(taggings_order)
+                  .where(context: tags_type)
+                else
+                  joins("INNER JOIN tag_bounds ON tag_bounds.tag_id = taggings.tag_id")
+                  .where("`tag_bounds`.`class_name` = ?", bound_class_name)
+                  .includes(:tag)
+                  .order(taggings_order)
+                  .where(context: tags_type)
+                end
+              },
+              as: :taggable,
+              class_name: ActsAsTaggableOn::Tagging,
+              dependent: :destroy
 
-            has_many context_tags, -> { order(taggings_order) },
-                     class_name: ActsAsTaggableOn::Tag,
-                     through: context_taggings,
-                     source: :tag
+            has_many context_tags,
+              -> {
+                if bound_class_name.nil?
+                  order(taggings_order)
+                else
+                  joins(:tag_bounds)
+                  .where("`tag_bounds`.`class_name` = ?", bound_class_name)
+                  .order(taggings_order)
+                end
+              },
+              class_name: ActsAsTaggableOn::Tag,
+              through: context_taggings,
+              source: :tag
           end
 
           taggable_mixin.class_eval <<-RUBY, __FILE__, __LINE__ + 1
@@ -321,7 +344,13 @@ module ActsAsTaggableOn::Taggable
     ##
     # Returns all tags that are not owned of a given context
     def tags_on(context)
-      scope = base_tags.where(["#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_id IS NULL", context.to_s])
+      scope = base_tags
+
+      if self.class.bounded_tags?
+        scope = scope.joins("JOIN tag_bounds ON `tag_bounds`.`tag_id` = tags.id").where("`tag_bounds`.`class_name` = ?", self.class.to_s)
+      end
+
+      scope = scope.where(["#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_id IS NULL", context.to_s])
       # when preserving tag order, return tags in created order
       # if we added the order to the association this would always apply
       scope = scope.order("#{ActsAsTaggableOn::Tagging.table_name}.id") if self.class.preserve_tag_order?
@@ -418,6 +447,12 @@ module ActsAsTaggableOn::Taggable
         # Create new taggings:
         new_tags.each do |tag|
           taggings.create!(tag_id: tag.id, context: context.to_s, taggable: self)
+        end
+
+        if self.class.bounded_tags?
+          new_tags.each do |tag|
+            tag.tag_bounds.find_or_create_by(class_name: self.class.to_s)
+          end
         end
       end
 
