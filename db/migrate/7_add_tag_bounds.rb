@@ -6,7 +6,7 @@ class AddTagBounds < ActiveRecord::Migration
     end
 
     add_index :tag_bounds, :tag_id
-    add_index :tag_bounds, [:tag_id, :class_name]
+    add_index :tag_bounds, [:tag_id, :class_name], unique: true
   end
 
   def down
