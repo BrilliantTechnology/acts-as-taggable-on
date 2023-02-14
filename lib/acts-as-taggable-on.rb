@@ -66,7 +66,7 @@ module ActsAsTaggableOn
     attr_accessor :force_lowercase, :force_parameterize,
                   :remove_unused_tags, :default_parser,
                   :tags_counter, :tags_table,
-                  :taggings_table
+                  :taggings_table, :tag_bounds_table
     attr_reader :delimiter, :strict_case_match
 
     def initialize
@@ -80,6 +80,7 @@ module ActsAsTaggableOn
       @force_binary_collation = false
       @tags_table = :tags
       @taggings_table = :taggings
+      @tag_bounds_table = :tag_bounds
     end
 
     def strict_case_match=(force_cs)
