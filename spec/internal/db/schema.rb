@@ -30,6 +30,13 @@ ActiveRecord::Schema.define version: 0 do
             unique: true, name: 'taggings_idx'
   add_index ActsAsTaggableOn.taggings_table, :tag_id , name: 'index_taggings_on_tag_id'
 
+  create_table ActsAsTaggableOn.tag_bounds_table do |t|
+    t.references :tag
+    t.string :class_name, limit: 128
+  end
+
+  add_index ActsAsTaggableOn.tag_bounds_table, %i[tag_id class_name], unique: true
+
   # above copied from
   # generators/acts_as_taggable_on/migration/migration_generator
 

@@ -58,6 +58,7 @@ module ActsAsTaggableOn
       @tags_table = :tags
       @taggings_table = :taggings
       @base_class = '::ActiveRecord::Base'
+      @tag_bounds_table = :tag_bounds
     end
 
     def strict_case_match=(force_cs)
