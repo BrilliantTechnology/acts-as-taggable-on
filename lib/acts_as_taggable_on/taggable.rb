@@ -58,6 +58,10 @@ module ActsAsTaggableOn
       taggable_with_bounds_on(false, true, tag_types)
     end
 
+    def acts_as_bounded_ordered_taggable_on(*tag_types)
+      taggable_with_bounds_on(true, true, tag_types)
+    end
+
     def acts_as_taggable_tenant(tenant)
       if taggable?
         self.tenant_column = tenant
