@@ -214,7 +214,7 @@ end
 ### Bounded tags _✨Experimental✨_
 
 With the addition of a `tag_bounds` join table, you can restrict tags on to the
-model it is defined with. Currently, only tags create with `*_tag_list` writer
+model it is defined with. Currently, only tags created with the `*_tag_list` setter
 will be automatically bounded to the model.
 
 ```ruby
@@ -237,6 +237,18 @@ p.save
 User.available_tags # [ #<Tag... name: "bob">,]
 Product.available_tags # [ #<Tag... name: "jane">,]
 ActsAsTaggableOn::Tag.all # [ #<Tag... name: "bob">, #<Tag... name: "jane">,]
+```
+
+An ordered version also exists
+
+```ruby
+class User < ActiveRecord::Base
+  acts_as_bounded_ordered_taggable_on :search_tags
+end
+
+class Product < ActiveRecord::Base
+  acts_as_bounded_ordered_taggable_on :search_tags
+end
 ```
 
 ### Finding most or least used tags
