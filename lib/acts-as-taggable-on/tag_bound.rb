@@ -1,6 +1,7 @@
 # encoding: utf-8
 module ActsAsTaggableOn
-  class TagBound < ::ActiveRecord::Base
+  class TagBound < ActsAsTaggableOn.base_class.constantize # :nodoc:
+    self.table_name = ActsAsTaggableOn.tag_bounds_table
 
     ### ASSOCIATIONS:
 

@@ -43,7 +43,7 @@ module ActsAsTaggableOn
     attr_accessor :force_lowercase, :force_parameterize,
                   :remove_unused_tags, :default_parser,
                   :tags_counter, :tags_table,
-                  :taggings_table
+                  :taggings_table, :tag_bounds_table
     attr_reader :delimiter, :strict_case_match, :base_class
 
     def initialize
