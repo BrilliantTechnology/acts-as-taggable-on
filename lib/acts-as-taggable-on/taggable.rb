@@ -42,8 +42,22 @@ module ActsAsTaggableOn
     end
 
     ##
-    # Make a model taggable on specified contexts
-    # and preserves the order in which tags are created
+    # Make a model taggable on specified contexts,
+    # binding the tags to the model
+    #
+    # @param [Array] tag_types An array of taggable contexts
+    #
+    # Example:
+    #   class User < ActiveRecord::Base
+    #     acts_as_bounded_taggable_on :languages, :skills
+    #   end
+    def acts_as_bounded_taggable_on(*tag_types)
+      taggable_on(false, tag_types, bound_by_model: true)
+    end
+
+    ##
+    # Make a model taggable on specified contexts,
+    # and preserving the order in which tags are created
     #
     # @param [Array] tag_types An array of taggable contexts
     #
@@ -53,6 +67,21 @@ module ActsAsTaggableOn
     #   end
     def acts_as_ordered_taggable_on(*tag_types)
       taggable_on(true, tag_types)
+    end
+
+    ##
+    # Make a model taggable on specified contexts,
+    # binding the tags to the model,
+    # and preserving the order in which tags are created
+    #
+    # @param [Array] tag_types An array of taggable contexts
+    #
+    # Example:
+    #   class User < ActiveRecord::Base
+    #     acts_as_bounded_ordered_taggable_on :languages, :skills
+    #   end
+    def acts_as_bounded_ordered_taggable_on(*tag_types)
+      taggable_on(true, tag_types, bound_by_model: true)
     end
 
     def acts_as_taggable_tenant(tenant)
@@ -84,22 +113,38 @@ module ActsAsTaggableOn
     # NB: method overridden in core module in order to create tag type
     #     associations and methods after this logic has executed
     #
-    def taggable_on(preserve_tag_order, *tag_types)
+    def taggable_on(preserve_tag_order, *tag_types, bound_by_model: false)
       tag_types = tag_types.to_a.flatten.compact.map(&:to_sym)
 
       if taggable?
         self.tag_types = (self.tag_types + tag_types).uniq
+        self.bounded_tags = bound_by_model
         self.preserve_tag_order = preserve_tag_order
       else
         class_eval do
+          class_attribute :bounded_tags
           class_attribute :tag_types
           class_attribute :preserve_tag_order
           class_attribute :tenant_column
+
+          self.bounded_tags = bound_by_model
           self.tag_types = tag_types
           self.preserve_tag_order = preserve_tag_order
 
           has_many :taggings, as: :taggable, dependent: :destroy, class_name: '::ActsAsTaggableOn::Tagging'
           has_many :base_tags, through: :taggings, source: :tag, class_name: '::ActsAsTaggableOn::Tag'
+
+          def self.available_tags
+            if bounded_tags?
+              ActsAsTaggableOn::Tag.joins(:tag_bounds).where(tag_bounds: { class_name: name })
+            else
+              ActsAsTaggableOn::Tag.all
+            end
+          end
+
+          def self.bounded_tags?
+            self.bounded_tags
+          end
 
           def self.taggable?
             true

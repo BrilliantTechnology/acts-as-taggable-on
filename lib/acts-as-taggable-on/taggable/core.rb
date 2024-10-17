@@ -24,18 +24,27 @@ module ActsAsTaggableOn
             context_taggings = "#{tag_type}_taggings".to_sym
             context_tags = tags_type.to_sym
             taggings_order = (preserve_tag_order? ? "#{ActsAsTaggableOn::Tagging.table_name}.id" : [])
+            bounded_tags = bounded_tags?
 
             class_eval do
               # when preserving tag order, include order option so that for a 'tags' context
               # the associations tag_taggings & tags are always returned in created order
-              has_many context_taggings, -> { includes(:tag).order(taggings_order).where(context: tags_type) },
+              has_many context_taggings,
+                       -> do
+                         scope = bounded_tags ? joins(:tag_bounds).where(tag_bounds: { class_name: name }) : self
+                         scope.includes(:tag).order(taggings_order).where(context: tags_type)
+                       end,
                        as: :taggable,
                        class_name: 'ActsAsTaggableOn::Tagging',
                        dependent: :destroy,
                        after_add: :dirtify_tag_list,
                        after_remove: :dirtify_tag_list
 
-              has_many context_tags, -> { order(taggings_order) },
+              has_many context_tags,
+                       -> do
+                         scope = bounded_tags ? joins(:tag_bounds).where(tag_bounds: { class_name: name }) : self
+                         scope.order(taggings_order)
+                       end,
                        class_name: 'ActsAsTaggableOn::Tag',
                        through: context_taggings,
                        source: :tag
@@ -182,7 +191,7 @@ module ActsAsTaggableOn
         tagging_table_name = ActsAsTaggableOn::Tagging.table_name
 
         opts = ["#{tagging_table_name}.context = ?", context.to_s]
-        scope = base_tags.where(opts)
+        scope = base_tags.where(opts).merge(self.class.available_tags)
 
         if ActsAsTaggableOn::Utils.using_postgresql?
           group_columns = grouped_column_names_for(ActsAsTaggableOn::Tag)
@@ -195,7 +204,7 @@ module ActsAsTaggableOn
       ##
       # Returns all tags that are not owned of a given context
       def tags_on(context)
-        scope = base_tags.where([
+        scope = base_tags.merge(self.class.available_tags).where([
                                   "#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_id IS NULL", context.to_s
                                 ])
         # when preserving tag order, return tags in created order
@@ -285,6 +294,11 @@ module ActsAsTaggableOn
             else
               taggings.create!(tag_id: tag.id, context: context.to_s, taggable: self)
             end
+          end
+
+          # Create tag bindings
+          new_tags.each do |tag|
+            tag.tag_bounds.find_or_create_by!(class_name: self.class.to_s)
           end
         end
 

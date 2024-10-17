@@ -10,7 +10,8 @@ loader.setup
 begin
   require 'rails/engine'
   require 'acts-as-taggable-on/engine'
-  rescue LoadError
+rescue LoadError
+  # no-op
 end
 
 require 'digest/sha1'
@@ -43,7 +44,7 @@ module ActsAsTaggableOn
     attr_accessor :force_lowercase, :force_parameterize,
                   :remove_unused_tags, :default_parser,
                   :tags_counter, :tags_table,
-                  :taggings_table
+                  :tag_bounds_table, :taggings_table
     attr_reader :delimiter, :strict_case_match, :base_class
 
     def initialize
@@ -57,6 +58,7 @@ module ActsAsTaggableOn
       @force_binary_collation = false
       @tags_table = :tags
       @taggings_table = :taggings
+      @tag_bounds_table = :tag_bounds
       @base_class = '::ActiveRecord::Base'
     end
 
