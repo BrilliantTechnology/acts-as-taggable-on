@@ -1,5 +1,3 @@
-# coding: utf-8
-
 require_relative 'lib/acts-as-taggable-on/version'
 
 Gem::Specification.new do |gem|
@@ -12,16 +10,18 @@ Gem::Specification.new do |gem|
   gem.homepage      = 'https://github.com/mbleigh/acts-as-taggable-on'
   gem.license       = 'MIT'
 
-  gem.files         = `git ls-files`.split($/)
-  gem.test_files    = gem.files.grep(%r{^spec/})
+  gem.files         = Dir['db/**/*', 'lib/**/*', 'LICENSE.md'].reject { |f| File.directory?(f) }
   gem.require_paths = ['lib']
-  gem.required_ruby_version     = '>= 3.0.0'
+  gem.required_ruby_version     = '>= 3.1.0'
+
+  gem.metadata = { 'changelog_uri' => gem.homepage + '/blob/master/CHANGELOG.md',
+                   'rubygems_mfa_required' => 'true' }
 
   if File.exist?('UPGRADING.md')
     gem.post_install_message = File.read('UPGRADING.md')
   end
 
-  gem.add_runtime_dependency 'activerecord', '>= 7.0', '< 8.0'
+  gem.add_runtime_dependency 'activerecord', '>= 7.1', '< 8.1'
   gem.add_runtime_dependency 'zeitwerk', '>= 2.4', '< 3.0'
 
   gem.add_development_dependency 'rspec-rails'
