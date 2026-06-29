@@ -112,7 +112,7 @@ module ActsAsTaggableOn
           tags = ActsAsTaggableOn::Tag.select("tags.*")
 
           if bounded_tags?
-            tags.joins(:tag_bounds).where("`tag_bounds`.`class_name` = ?", self.to_s)
+            tags.joins(:tag_bounds).where("tag_bounds.class_name = ?", self.to_s)
           else
             tags
           end

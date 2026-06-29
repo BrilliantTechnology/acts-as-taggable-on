@@ -37,7 +37,7 @@ module ActsAsTaggableOn
                     .where(context: tags_type)
                   else
                     joins("INNER JOIN tag_bounds ON tag_bounds.tag_id = taggings.tag_id")
-                    .where("`tag_bounds`.`class_name` = ?", bound_class_name)
+                    .where("tag_bounds.class_name = ?", bound_class_name)
                     .includes(:tag).order(taggings_order)
                     .where(context: tags_type)
                   end
@@ -218,7 +218,7 @@ module ActsAsTaggableOn
       def tags_on(context)
         scope = base_tags
         if self.class.bounded_tags?
-          scope = scope.joins("JOIN tag_bounds ON `tag_bounds`.`tag_id` = tags.id").where("`tag_bounds`.`class_name` = ?", self.class.to_s)
+          scope = scope.joins("JOIN tag_bounds ON tag_bounds.tag_id = tags.id").where("tag_bounds.class_name = ?", self.class.to_s)
         end
         scope = scope.where(["#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_id IS NULL", context.to_s])
         # when preserving tag order, return tags in created order
