@@ -80,6 +80,11 @@ ActiveRecord::Schema.define version: 0 do
     t.column :name, :string
   end
 
+  create_table :bounded_taggable_models, force: true do |t|
+    t.column :name, :string
+    t.column :type, :string
+  end
+
   create_table :users, force: true do |t|
     t.column :name, :string
   end

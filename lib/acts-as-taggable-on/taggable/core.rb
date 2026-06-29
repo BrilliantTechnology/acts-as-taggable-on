@@ -50,13 +50,12 @@ module ActsAsTaggableOn
 
               has_many context_tags,
               -> {
-                if bound_class_name.nil?
-                  order(taggings_order)
-                else
-                  joins(:tag_bounds)
-                  .where("`tag_bounds`.`class_name` = ?", bound_class_name)
-                  .order(taggings_order)
-                end
+                # The `through: context_taggings` association already restricts results to
+                # tags bound to this class (it joins and filters tag_bounds by class_name).
+                # Re-joining tag_bounds here added a second join that ActiveRecord aliases
+                # and leaves unfiltered by class_name, so a tag bound to N classes was
+                # returned N times. Just order; the through handles the bounding.
+                order(taggings_order)
               },
               class_name: 'ActsAsTaggableOn::Tag',
               through: context_taggings,
