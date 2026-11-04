@@ -10,6 +10,20 @@ Each change should fall into categories that would affect whether the release is
 
 As such, _Breaking Changes_ are major. _Features_ would map to either major or minor. _Fixes_, _Performance_, and _Misc_ are either minor or patch, the difference being kind of fuzzy for the purposes of history. Adding _Documentation_ (including tests) would be patch level.
 
+### v9.0.0 (BrilliantTechnology fork)
+* Breaking Changes
+  * Require ActiveRecord >= 8.1 (< 9.0) and Ruby >= 3.2
+  * Tag list caching methods (`save_cached_tag_list`, `caching_*_list?`) are now always defined on taggable models; caching is still only active when a matching `cached_*_list` column exists
+* Fixes
+  * Tag list caching was never enabled on Rails >= 7.1 (schema loading no longer calls `.columns`)
+  * Remove `mb_chars` / forced BINARY encoding in tag lookups, which raised `Encoding::UndefinedConversionError` with non-ASCII tags
+  * Use a savepoint instead of a raw `ROLLBACK` when retrying on `RecordNotUnique`, so the caller's transaction is not rolled back (port of upstream #1081)
+  * Use `lease_connection` instead of the soft-deprecated `connection`
+  * Detect Trilogy as MySQL and PostGIS as PostgreSQL
+  * `AddTagBounds` migration inherited directly from `ActiveRecord::Migration`, which Rails >= 5 refuses to run; pinned to `Migration[4.2]` like the other migrations
+* Misc
+  * Test against Rails 8.1 on SQLite, MySQL (mysql2 and trilogy) and PostgreSQL
+
 ### [v8.1.0) / 2021-06-19](https://github.com/mbleigh/acts-as-taggable-on/compare/v8.0.0...v8.1.0)
 * Fixes
  * [@ngouy Fix rollbackable tenant migrations](https://github.com/mbleigh/acts-as-taggable-on/pull/1038)

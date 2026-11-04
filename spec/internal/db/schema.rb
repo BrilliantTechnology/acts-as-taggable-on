@@ -30,7 +30,7 @@ ActiveRecord::Schema.define version: 0 do
             unique: true, name: 'taggings_idx'
   add_index ActsAsTaggableOn.taggings_table, :tag_id , name: 'index_taggings_on_tag_id'
 
-  create_table ActsAsTaggableOn.tag_bounds_table do |t|
+  create_table ActsAsTaggableOn.tag_bounds_table, force: true do |t|
     t.references :tag
     t.string :class_name, limit: 128
   end

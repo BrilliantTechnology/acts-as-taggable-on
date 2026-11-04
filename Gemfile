@@ -7,6 +7,6 @@ group :local_development do
   gem 'guard-rspec'
   gem 'appraisal'
   gem 'rake'
-  gem 'sqlite3'
+  gem 'sqlite3', '>= 2.1'
   gem 'byebug', platforms: [:mri]
 end

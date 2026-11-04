@@ -595,6 +595,8 @@ Versions >= 4.x are compatible with Ruby 2.0.0+ and Rails 4 and 5.
 
 Versions >= 7.x are compatible with Ruby 2.3.7+ and Rails 5 and 6.
 
+This fork (BrilliantTechnology/acts-as-taggable-on) version 9.x is compatible with Ruby 3.2+ and Rails (ActiveRecord) 8.1+.
+
 For an up-to-date roadmap, see https://github.com/mbleigh/acts-as-taggable-on/milestones
 
 ## TODO

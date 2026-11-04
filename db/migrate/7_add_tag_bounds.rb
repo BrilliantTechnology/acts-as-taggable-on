@@ -1,4 +1,4 @@
-class AddTagBounds < ActiveRecord::Migration
+class AddTagBounds < ActiveRecord::Migration[4.2]
   def up
     create_table :tag_bounds do |t|
       t.references :tag
