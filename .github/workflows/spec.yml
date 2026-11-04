@@ -10,55 +10,24 @@ jobs:
       DB: ${{ matrix.db }}
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     strategy:
+      fail-fast: false
       matrix:
         ruby:
-          - 2.3
-          - 2.4
-          - 2.5
-          - 2.6
-          - 2.7
-          - 3.0
+          - '3.2'
+          - '3.3'
+          - '3.4'
           - head
         gemfile:
-          - gemfiles/activerecord_5.0.gemfile
-          - gemfiles/activerecord_5.2.gemfile
-          - gemfiles/activerecord_5.1.gemfile
-          - gemfiles/activerecord_6.0.gemfile
-          - gemfiles/activerecord_6.1.gemfile
+          - gemfiles/activerecord_8.1.gemfile
         db:
           - mysql
+          - trilogy
           - postgresql
           - sqlite3
-        exclude:
-          # Unfortunately, the mysql2 gem encounters a segfault in the ruby 2.3 environment:
-          - ruby: 2.3
-            db: mysql
-          # Exclude ActiveRecord 6.x for Ruby < 2.5
-          - ruby: 2.3
-            gemfile: gemfiles/activerecord_6.0.gemfile
-          - ruby: 2.3
-            gemfile: gemfiles/activerecord_6.1.gemfile
-          - ruby: 2.4
-            gemfile: gemfiles/activerecord_6.0.gemfile
-          - ruby: 2.4
-            gemfile: gemfiles/activerecord_6.1.gemfile
-          # Exclude ActiveRecord 5.x for Ruby >= 3.0
-          - ruby: 3.0
-            gemfile: gemfiles/activerecord_5.0.gemfile
-          - ruby: 3.0
-            gemfile: gemfiles/activerecord_5.1.gemfile
-          - ruby: 3.0
-            gemfile: gemfiles/activerecord_5.2.gemfile
-          - ruby: head
-            gemfile: gemfiles/activerecord_5.0.gemfile
-          - ruby: head
-            gemfile: gemfiles/activerecord_5.1.gemfile
-          - ruby: head
-            gemfile: gemfiles/activerecord_5.2.gemfile
 
     services:
       postgres:
-        image: postgres:10
+        image: postgres:16
         env:
           POSTGRES_USER: postgres
           POSTGRES_DB: acts_as_taggable_on
@@ -80,14 +49,14 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby }}
         bundler-cache: true
     - name: Create MySQL test database with utf8mb4 charset
-      if: ${{ matrix.db == 'mysql' }}
+      if: ${{ matrix.db == 'mysql' || matrix.db == 'trilogy' }}
       run: |
         mysql -uroot --host=127.0.0.1 -e "CREATE DATABASE acts_as_taggable_on CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci"
     - name: Build and test with Rake

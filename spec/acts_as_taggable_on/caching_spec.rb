@@ -16,8 +16,12 @@ describe 'Acts As Taggable On' do
       expect(@taggable).to respond_to(:save_tags)
     end
 
-    it 'should add cached tag lists to the instance if cached column is not present' do
-      expect(TaggableModel.new(name: 'Art Kram')).to_not respond_to(:save_cached_tag_list)
+    it 'should not cache tag lists if cached column is not present' do
+      expect(TaggableModel.caching_tag_list?).to be false
+      expect(CachedModel.caching_tag_list?).to be true
+
+      taggable = TaggableModel.create!(name: 'Art Kram', tag_list: 'awesome')
+      expect(taggable.reload.tag_list).to eq(['awesome'])
     end
 
     it 'should generate a cached column checker for each tag type' do

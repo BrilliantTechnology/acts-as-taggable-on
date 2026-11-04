@@ -100,9 +100,9 @@ describe ActsAsTaggableOn::Tag do
     end
 
     it 'should create by name' do
-      expect(-> {
+      expect {
         ActsAsTaggableOn::Tag.find_or_create_with_like_by_name('epic')
-      }).to change(ActsAsTaggableOn::Tag, :count).by(1)
+      }.to change(ActsAsTaggableOn::Tag, :count).by(1)
     end
   end
 
@@ -181,6 +181,41 @@ describe ActsAsTaggableOn::Tag do
 
     it 'should return an empty array if no tags are specified' do
       expect(ActsAsTaggableOn::Tag.find_or_create_all_with_like_by_name([])).to be_empty
+    end
+
+    context 'another tag is created concurrently', :database_cleaner_delete, if: supports_concurrency? do
+      it 'retries and finds tag if tag with same name created concurrently' do
+        tag_name = 'super'
+
+        expect(ActsAsTaggableOn::Tag).to receive(:create).with(name: tag_name) do
+          # Simulate concurrent tag creation
+          Thread.new do
+            ActsAsTaggableOn::Tag.new(name: tag_name).save!
+          end.join
+
+          raise ActiveRecord::RecordNotUnique
+        end
+
+        expect {
+          ActsAsTaggableOn::Tag.find_or_create_all_with_like_by_name(tag_name)
+        }.to change(ActsAsTaggableOn::Tag, :count).by(1)
+      end
+    end
+
+    it 'does not roll back the surrounding transaction when a duplicate is retried' do
+      calls = 0
+      allow(ActsAsTaggableOn::Tag).to receive(:create).and_wrap_original do |original, *args, **kwargs|
+        calls += 1
+        raise ActiveRecord::RecordNotUnique if calls == 1
+        original.call(*args, **kwargs)
+      end
+
+      ActsAsTaggableOn::Tag.transaction do
+        ActsAsTaggableOn::Tag.create!(name: 'before')
+        ActsAsTaggableOn::Tag.find_or_create_all_with_like_by_name('after')
+      end
+
+      expect(ActsAsTaggableOn::Tag.where(name: %w[before after]).count).to eq(2)
     end
   end
 
